@@ -1,55 +1,65 @@
 #include <iostream>
-#include <string>
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include <queue>
 
 using namespace std;
 
-int root[210];
-int uf_rank[210];
-int N;
+vector<int> edge[210];
+bool visit[210];
+int answer_count;
 
-int find_union(int a){
-  if(root[a]==a){
-    return a;
-  } else {
-    return root[a]=find_union(root[a]);
-  }
-}
+void bfs(int i){
+  queue<int> q;
+  q.push(i);
+  visit[i]=true;
 
-void set_union(int a, int b) {
-  int x = find_union(a);
-  int y = find_union(b);
-  if(x==y) return;
-  if(uf_rank[x] < uf_rank[y]){
-    root[x] = y;
-  }else{
-    root[y] = x;
-    if(uf_rank[x]==uf_rank[y]){
-      uf_rank[x]++;
+//  cout<<i<<endl;
+  while(!q.empty()){
+    int current = q.front();
+    q.pop();
+    for (int j = 0; j < edge[current].size(); ++j) {
+      int next = edge[current][j];
+//      cout<<current<<"->"<<next<<endl;
+      if(!visit[next]){
+        visit[next]=true;
+        q.push(next);
+      }
     }
   }
+  answer_count++;
+}
 
+int all_visit(int n){
+  for (int i = 0; i < n; ++i) {
+    if(visit[i]==false) return i;
+  }
+  return -1;
 }
 
 int solution(int n, vector<vector<int>> computers) {
-  for (int i = 0; i < n; ++i) {
-    root[i]=i;
-  }
   for (int i = 0; i < computers.size(); ++i) {
     for (int j = 0; j < computers[i].size(); ++j) {
-      if(computers[i][j]==1 ) set_union(i,j);
+      if(i==j) continue;
+      if(computers[i][j]==1) {
+        edge[i].push_back(j);
+        edge[j].push_back(i);
+      }
     }
   }
-  vector<int> size_answer;
-  for (int i = 0; i < n; ++i) {
-    if(find(size_answer.begin(),size_answer.end(),find_union(i))==size_answer.end())
-      size_answer.push_back(find_union(i));
+  memset(visit,false,210);
+  int false_index= all_visit(n);
+  while(false_index!=-1){
+    bfs(false_index);
+//    for (int i = 0; i < n; ++i) {
+//      cout<<visit[i]<<"\t";
+//    }cout<<endl;
+    false_index= all_visit(n);
   }
-  return size_answer.size();
+  return answer_count;
 }
 
 int main() {
-  cout<<solution(5, {{1,0,0,0,0}, {0,1,0,0,1}, {0,0,1, 0, 1}, {0,0,0,1,1},{1,0,0,0,1}})<<endl;
+  cout<<solution(5, {{1,0,0,0,0},{0,1,0,0,1},{0,0,1,0,1},{0,0,0,1,1},{1,0,0,0,1}})<<endl;
 }
